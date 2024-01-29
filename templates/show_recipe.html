@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<body>
+<ul class="navbar-nav mr-auto">
+    <li class="nav-item active">
+        <a class="nav-link" href="{{ url_for('index') }}">Home </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('add_recipe') }}">Add Recipe</a>
+    </li>
+</ul>
+
+<h3>{{recipe.title}}</h3>
+<h4>{{recipe.author.username}}</h4>
+<h4>Publish date: {{recipe.timestamp}}</h4>
+<ul>
+<h4>Ingredients (Per Serving)</h4>
+<p>Serving: <input type="number" id="numberInput" value="1" min="1"></p>
+
+{% for ingre in recipe.ingredients %}
+<li>
+    <h4>{{ingre[0]}}</h4>
+    <div id="example" value="{{ingre[1]}}">{{ingre[1]}}</div><p> (gr/cl)</p>
+</li>
+{% endfor %}
+</ul>
+
+<p>{{recipe.instructions}}</p>
+
+<script>
+    // Get the input element and result element
+    const numberInput = document.getElementById('numberInput');
+
+    // Add an input event listener to the number input
+    numberInput.addEventListener('input', updateResult);
+
+    // Function to update the result element
+    function updateResult() {
+      // Get the value of the number input
+      const inputValue = parseFloat(numberInput.value) || 0;
+      const elements = Array.from(document.querySelectorAll('#example'));
+      elements.forEach(element => {
+          const value = parseFloat(element.getAttribute('value'));
+          element.innerText = (value * inputValue).toString();
+      });
+    }
+</script>
+
+
+</body>
