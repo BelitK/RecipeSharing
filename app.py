@@ -1,18 +1,17 @@
-# app.py
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
 from environs import Env
+from flask import Flask, redirect, render_template, request, url_for
+from flask_sqlalchemy import SQLAlchemy
 
 env = Env()
 env.read_env()
 
 DATABASE_URL = env("DATABASE_STRING")
+Secret = env("SECRET")
 app = Flask(__name__)
-app.config[
-    "SQLALCHEMY_DATABASE_URI"
-] = "postgresql://belit:12897@173.212.221.185:5555/BelitPersonel"
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 db = SQLAlchemy(app)
+# postgresql://belit:12897@173.212.221.185:5555/BelitPersonel
 
 
 class User(db.Model):
@@ -37,11 +36,11 @@ with app.app_context():
     db.create_all()
 
 
-def check_user(user):
-    a = User.query.filter_by(username=user).first()
-    if a:
-        return a
-    return User(username=user)
+def check_user(username: User) -> User:
+    user = User.query.filter_by(username=username).first()
+    if user:
+        return user
+    return User(username=username)
 
 
 @app.route("/")
@@ -71,33 +70,37 @@ def add_recipe():
         # try:
         db.session.commit()
         # except e as Exception
+        db.session.refresh(new_recipe)
 
-        return redirect(url_for("index"))
+        return redirect(url_for("show_recipe", id=new_recipe.id))
 
     return render_template("add_recipe.html")
 
 
-@app.route("/recipe/<id>")
-def show_recipe(id):
-    result = Recipe.query.filter_by(id=id).first()
+@app.route("/recipe/<int:id>")
+def show_recipe(id: int):
+    result = Recipe.query.filter_by(id=id).first_or_404()
     return render_template("show_recipe.html", recipe=result)
+
 
 @app.route("/search", methods=["GET"])
 def search():
     if request.method == "GET":
         value = f"%{request.form['search']}%"
-        return Recipe.query.filter(Recipe.title.like(value)).first().title
-    
-    return 'a'
-        
-@app.route("/delete/<id>")
-def delete_recipe(id):
-    result = Recipe.query.filter_by(id=id).first()
-    if result is None:
-        return "No Record"
-    db.session.delete(result)
-    db.session.commit()
-    return f"{id} numbered record has been deleted"
+        result = Recipe.query.filter(Recipe.title.like(value)).first_or_404()
+        return redirect(url_for("show_recipe", id=result.id))
+    #TODO return list and reformat to pages
+
+
+@app.route("/delete/<int:id>/secret=<secret>")
+def delete_recipe(id: int, secret: str):
+    if secret == Secret:
+        result = Recipe.query.filter_by(id=id).first_or_404("Doesn't exist")
+        db.session.delete(result)
+        db.session.commit()
+        return f"""id = {id} Record Deleted <br> <a href='{{url_for("index")}}'>Homepage</a>""", 200
+    return "Wrong Secret", 403
+
 
 if __name__ == "__main__":
     app.run(debug=True)
