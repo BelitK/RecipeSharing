@@ -1,6 +1,12 @@
 import pytest
 from app import app
+from environs import Env
 
+
+env = Env()
+env.read_env()
+
+Secret = env("SECRET")
 
 @pytest.fixture
 def client():
@@ -32,7 +38,7 @@ def test_add_delete_recipe_route(client):
     id = response.location.split('/')[-1]
     response = client.get(response.location, follow_redirects=True)
     assert test_data['title'] in response.text
-    response = client.get(f"/delete/{id}",follow_redirects=True)
+    response = client.get(f"/delete/{id}/secret={Secret}",follow_redirects=True)
     assert response.status_code in [200,404]
 
 

@@ -91,7 +91,7 @@ def search():
         return redirect(url_for("show_recipe", id=result.id))
     #TODO return list and reformat to pages
 
-
+@app.route("/delete/<int:id>")
 @app.route("/delete/<int:id>/secret=<secret>")
 def delete_recipe(id: int, secret: str):
     if secret == Secret:
