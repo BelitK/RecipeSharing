@@ -11,7 +11,6 @@ Secret = env("SECRET")
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 db = SQLAlchemy(app)
-# postgresql://belit:12897@173.212.221.185:5555/BelitPersonel
 
 
 class User(db.Model):
